@@ -1,4 +1,4 @@
-src=main.c HomeTUI.c
+src=main.c HomeTUI.c ncurses_renderer.c
 target=window
 
 main: 
