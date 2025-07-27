@@ -116,7 +116,8 @@ void ui_click_element(void *data, enum ui_type type) {
 		break;
 	case BUTTON:;
 		struct ui_button_data *bd = (struct ui_button_data *)data;
-		bd->onClick();
+		if (bd->onClick)
+			bd->onClick();
 		break;
 	case TEXT_BOX:
 		break;
@@ -158,7 +159,7 @@ int ui_add_checkbox(struct ui *context, int x, int y, int state, onCheckBoxClick
 	box->x = x;
 	box->y = y;
 	box->w = 4;
-	box->h = 3;
+	box->h = 2;
 	box->type = CHECK_BOX;
 
 	struct ui_checkbox_data *cd = (struct ui_checkbox_data *)malloc(sizeof(struct ui_button_data));
