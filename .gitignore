@@ -1,0 +1,7 @@
+.clang-format
+.cache/
+compile_commands.json
+
+*.a
+*.log
+*.o
