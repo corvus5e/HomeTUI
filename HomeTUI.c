@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-enum ui_type { LABEL, BUTTON, TEXT_BOX, CHECK_BOX };
+enum ui_type { LABEL, BUTTON, TEXT_BOX, CHECK_BOX, TYPE_COUNT }; //NOTE: do not change order
 
 struct ui_box {
 	int x, y, w, h;
@@ -23,6 +23,7 @@ enum ui_mode { HOVER, EDIT, IDLE };
 struct ui_style {
 	char vertical_border;
 	char horizontal_border;
+	char corner;
 } idle_style, hovered_style, edit_style;
 
 struct ui_button_data {
@@ -35,10 +36,24 @@ struct ui_checkbox_data {
 	onCheckBoxClick onClick;
 };
 
-void ui_click_element(void *data, enum ui_type);
-
 void ui_render_button(const struct ui_box *, struct ui_style);
 void ui_render_checkbox(const struct ui_box *, struct ui_style);
+
+void ui_click_button(const struct ui_box *);
+void ui_click_checkbox(const struct ui_box *);
+
+void ui_click_element(const struct ui_box *box) {
+	static void (*ui_click_[TYPE_COUNT])(const struct ui_box *) = {
+	    NULL, ui_click_button, NULL, ui_click_checkbox};
+	ui_click_[box->type](box);
+}
+
+void ui_render_element(const struct ui_box *box, struct ui_style style) {
+	static void (*ui_render_[TYPE_COUNT])(const struct ui_box *,
+					      struct ui_style) = {
+	    NULL, ui_render_button, NULL, ui_render_checkbox};
+	ui_render_[box->type](box, style);
+}
 
 struct ui* ui_create(void)
 {
@@ -51,9 +66,11 @@ struct ui* ui_create(void)
 
 	idle_style.vertical_border = '|';
 	idle_style.horizontal_border = '-';
+	idle_style.corner = '+';
 
-	hovered_style.vertical_border = '*';
-	hovered_style.horizontal_border = '*';
+	hovered_style.vertical_border = '|';
+	hovered_style.horizontal_border = '=';
+	hovered_style.corner = '*';
 
 	return context;
 }
@@ -66,18 +83,9 @@ void ui_render(const struct ui *context)
 		enum ui_mode mode = i == context->selected ? HOVER : IDLE;
 		struct ui_style style =
 		    mode == IDLE ? idle_style : hovered_style;
-		struct ui_box *current = context->ui_controls[i];
 
-		switch (current->type) {
-		case LABEL:
-		case BUTTON:
-			ui_render_button(current, style);
-		case TEXT_BOX:
-			break;
-		case CHECK_BOX:
-			ui_render_checkbox(current, style);
-			break;
-		}
+		struct ui_box *current = context->ui_controls[i];
+		ui_render_element(current, style);
 	}
 
 	render_update();
@@ -105,28 +113,8 @@ void ui_process_input(struct ui *context, int key)
 		context->selected += inc;
 		if (click) {
 			struct ui_box *curr_element = context->ui_controls[context->selected];
-			ui_click_element(curr_element->data, curr_element->type);
+			ui_click_element(curr_element);
 		}
-	}
-}
-
-void ui_click_element(void *data, enum ui_type type) {
-	switch (type) {
-	case LABEL:
-		break;
-	case BUTTON:;
-		struct ui_button_data *bd = (struct ui_button_data *)data;
-		if (bd->onClick)
-			bd->onClick();
-		break;
-	case TEXT_BOX:
-		break;
-	case CHECK_BOX:;
-		struct ui_checkbox_data *cd = (struct ui_checkbox_data *)data;
-		cd->isChecked = !cd->isChecked;
-		if(cd->onClick)
-			cd->onClick(cd->isChecked);
-		break;
 	}
 }
 
@@ -171,6 +159,24 @@ int ui_add_checkbox(struct ui *context, int x, int y, int state, onCheckBoxClick
 	return context->ui_controls_size++;
 }
 
+/**********************
+ * CLICK UI FUNCTIONS *
+ **********************/
+
+void ui_click_button(const struct ui_box *box){
+	struct ui_button_data *bd = (struct ui_button_data *)box->data;
+	if (bd->onClick)
+		bd->onClick();
+}
+void ui_click_checkbox(const struct ui_box *box){
+	struct ui_checkbox_data *cd = (struct ui_checkbox_data *)box->data;
+	cd->isChecked = !cd->isChecked;
+	if(cd->onClick)
+		cd->onClick(cd->isChecked);
+
+}
+
+
 /*********************
  * DRAW UI FUNCTIONS *
  *********************/
@@ -186,7 +192,12 @@ void ui_render_box(const struct ui_box *button, struct ui_style style){
 		render_cell(x, y_end, style.horizontal_border);
 	}
 
-	for (int y = y_start; y <= y_end; ++y) {
+	render_cell(x_start, y_start, style.corner);
+	render_cell(x_end, y_start, style.corner);
+	render_cell(x_start, y_end, style.corner);
+	render_cell(x_end, y_end, style.corner);
+
+	for (int y = y_start + 1; y < y_end; ++y) {
 		render_cell(x_start, y, style.vertical_border);
 		render_cell(x_end, y, style.vertical_border);
 	}
