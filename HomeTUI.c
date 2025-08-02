@@ -3,20 +3,27 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define CONTROLS_NUM 10
+
 enum ui_type { LABEL, BUTTON, TEXT_BOX, CHECK_BOX, TYPE_COUNT }; //NOTE: do not change order
 
-struct ui_box {
-	int x, y, w, h;
+struct ui_control {
 	enum ui_type type;
+	struct ui_box *box;
 };
 
 enum ui_mode { NAVIGATE, EDIT };
 
 struct ui {
 	//TODO: replace with vector/list
-	struct ui_box *ui_controls[10];
+	struct ui_control ui_controls[CONTROLS_NUM];
 	int ui_controls_size;
+
 	int selected;
+
+	struct ui_label *ui_labels[CONTROLS_NUM];
+	int ui_lables_size;
+
 	enum ui_mode mode;
 };
 
@@ -26,47 +33,38 @@ struct ui_style {
 	char corner;
 } idle_style = {'|', '-', '+'}, hovered_style = {'|', '=', '*'};
 
-struct ui_button {
-	struct ui_box box;
-	char *text;
-	onButtonClick on_click;
-};
+int ui_add_control(struct ui *ctx, struct ui_box *box, enum ui_type type)
+{
+	ctx->ui_controls[ctx->ui_controls_size].type = type;
+	ctx->ui_controls[ctx->ui_controls_size].box = box;
 
-struct ui_checkbox {
-	struct ui_box box;
-	int is_checked;
-	onCheckBoxClick on_click;
-};
+	return ctx->ui_controls_size++;
+}
 
-struct ui_textbox {
-	struct ui_box box;
-	char *text;
-	onTextBoxTextEntered on_value_entered;
-};
-
+void ui_render_label(const struct ui *ctx, const struct ui_label *);
 void ui_render_button(const struct ui *ctx, const struct ui_box *, struct ui_style);
-void ui_render_checkbox(const struct ui *ctx, const struct ui_box *, struct ui_style);
 void ui_render_textbox(const struct ui *ctx, const struct ui_box *, struct ui_style);
+void ui_render_checkbox(const struct ui *ctx, const struct ui_box *, struct ui_style);
 
 void ui_click_button(struct ui *ctx, const struct ui_box *);
 void ui_click_checkbox(struct ui *ctx, const struct ui_box *);
 void ui_click_textbox(struct ui *ctx, const struct ui_box *);
 
-void ui_click_element(struct ui *ctx, const struct ui_box *box)
+void ui_click_control(struct ui *ctx, const struct ui_control control)
 {
 	static void (*ui_click_[TYPE_COUNT])(struct ui *,
 					     const struct ui_box *) = {
 	    NULL, ui_click_button, ui_click_textbox, ui_click_checkbox};
-	ui_click_[box->type](ctx, box);
+	ui_click_[control.type](ctx, control.box);
 }
 
-void ui_render_element(const struct ui *ctx, const struct ui_box *box,
+void ui_render_control(const struct ui *ctx, const struct ui_control control,
 		       struct ui_style style)
 {
 	static void (*ui_render_[TYPE_COUNT])(
 	    const struct ui *, const struct ui_box *, struct ui_style) = {
 	    NULL, ui_render_button, ui_render_textbox, ui_render_checkbox};
-	ui_render_[box->type](ctx, box, style);
+	ui_render_[control.type](ctx, control.box, style);
 }
 
 struct ui *ui_create(void)
@@ -85,11 +83,11 @@ void ui_render(const struct ui *ctx)
 {
 	render_clear();
 
-	for (int i = 0; i < ctx->ui_controls_size; ++i) {
-		ui_render_element(ctx, ctx->ui_controls[i], i == ctx->selected
-							   ? hovered_style
-							   : idle_style);
-	}
+	for (int i = 0; i < ctx->ui_controls_size; ++i)
+		ui_render_control(ctx, ctx->ui_controls[i], i == ctx->selected ? hovered_style : idle_style);
+
+	for(int i = 0; i < ctx->ui_lables_size; ++i)
+		ui_render_label(ctx, ctx->ui_labels[i]);
 
 	render_update();
 }
@@ -111,7 +109,7 @@ void ui_process_input_navigate(struct ui *ctx, int key)
 void ui_process_input_edit(struct ui *ctx, int key)
 {
 	//NOTE: Currently only textbox is editable
-	struct ui_textbox *tb = (struct ui_textbox*)ctx->ui_controls[ctx->selected];
+	struct ui_textbox *tb = (struct ui_textbox*)ctx->ui_controls[ctx->selected].box;
 	if(key == 127/*Del*/){
 		size_t n = strlen(tb->text);
 		if(n > 0)
@@ -128,7 +126,7 @@ void ui_process_input_edit(struct ui *ctx, int key)
 void ui_process_input(struct ui *ctx, int key)
 {
 	if(key == 10 || key == 13) {
-		ui_click_element(ctx, ctx->ui_controls[ctx->selected]);
+		ui_click_control(ctx, ctx->ui_controls[ctx->selected]);
 		return;
 	}
 
@@ -140,58 +138,66 @@ void ui_process_input(struct ui *ctx, int key)
 			ui_process_input_edit(ctx, key);
 		break;
 	}
-
 }
 
+struct ui_label *ui_add_label(struct ui *ctx, int x, int y, int w, int h, char *text)
+{
+	struct ui_label *label = (struct ui_label*)malloc(sizeof(struct ui_label));
 
-int ui_add_button(struct ui *context, int x, int y, int w, int h, char *text,
+	struct ui_box box = {x, y, w, h};
+	label->box = box;
+	label->text = (char*)malloc(sizeof(char)*100); //TODO: replace with vector
+	strcpy(label->text, text);
+
+	ctx->ui_labels[ctx->ui_lables_size++] = label;
+
+	return label;
+}
+
+struct ui_button *ui_add_button(struct ui *ctx, int x, int y, int w, int h, char *text,
 		  onButtonClick on_click)
 {
 	struct ui_button *button = (struct ui_button *)malloc(sizeof(struct ui_button));
 
 	struct ui_box box = {x, y, w, h};
 	button->box = box;
-	button->box.type = BUTTON;
 
 	button->text = text; //TODO: copy, for now usilg litterals;
 	button->on_click = on_click;
 
-	//TODO: Move to a separate function, like add_element
-	context->ui_controls[context->ui_controls_size] = (struct ui_box*)button;
+	ui_add_control(ctx, (struct ui_box*)button, BUTTON);
 
-	return context->ui_controls_size++;
+	return button;
 }
 
-int ui_add_checkbox(struct ui *context, int x, int y, int state, onCheckBoxClick on_click)
+struct ui_checkbox *ui_add_checkbox(struct ui *ctx, int x, int y, int state, onCheckBoxClick on_click)
 {
-	struct ui_checkbox *check_box = (struct ui_checkbox *)malloc(sizeof(struct ui_button));
+	struct ui_checkbox *check_box = (struct ui_checkbox *)malloc(sizeof(struct ui_checkbox));
 
 	struct ui_box box = {x, y, 4, 2};
 	check_box->box = box;
-	check_box->box.type = CHECK_BOX;
-
 	check_box->on_click = on_click;
 
-	context->ui_controls[context->ui_controls_size] = (struct ui_box*)check_box;
+	ui_add_control(ctx, (struct ui_box*)check_box, CHECK_BOX);
 
-	return context->ui_controls_size++;
+	return check_box;
 }
 
-int ui_add_textbox(struct ui *ctx, int x, int y, int w, int h, char *text, onTextBoxTextEntered on_value_entered)
+struct ui_textbox *ui_add_textbox(struct ui *ctx, int x, int y, int w, int h, char *text, onTextBoxTextEntered on_value_entered)
 {
 	struct ui_textbox *text_box = (struct ui_textbox *)malloc(sizeof(struct ui_textbox));
 
 	struct ui_box box = {x, y, w, h};
 	text_box->box = box;
-	text_box->box.type = TEXT_BOX;
 
-	text_box->text = (char*)malloc(sizeof(char)*100);//text;
+	//TODO: replace with vector
+	text_box->text = (char*)malloc(sizeof(char)*100);
 	strcpy(text_box->text, text);
 	text_box->on_value_entered = on_value_entered;
 
-	ctx->ui_controls[ctx->ui_controls_size] = (struct ui_box*)text_box;
+	ui_add_control(ctx, (struct ui_box*)text_box, TEXT_BOX);
 
-	return ctx->ui_controls_size++;
+	return text_box;
 }
 
 /**********************
@@ -199,31 +205,31 @@ int ui_add_textbox(struct ui *ctx, int x, int y, int w, int h, char *text, onTex
  **********************/
 void ui_click_button(struct ui *ctx, const struct ui_box *box)
 {
-	struct ui_button *bd = (struct ui_button *)box;
-	if (bd->on_click)
-		bd->on_click();
+	struct ui_button *button = (struct ui_button *)box;
+	if (button->on_click)
+		button->on_click(button);
 }
 
 void ui_click_checkbox(struct ui *ctx, const struct ui_box *box)
 {
-	struct ui_checkbox *cd = (struct ui_checkbox *)box;
-	cd->is_checked = !cd->is_checked;
-	if (cd->on_click)
-		cd->on_click(cd->is_checked);
+	struct ui_checkbox *check_box = (struct ui_checkbox *)box;
+	check_box->is_checked = !check_box->is_checked;
+	if (check_box->on_click)
+		check_box->on_click(check_box);
 }
 
 //TODO: Rename it, it is not clicked actually
 void ui_click_textbox(struct ui *ctx, const struct ui_box *box)
 {
-	struct ui_textbox *tb = (struct ui_textbox *)box;
+	struct ui_textbox *text_box = (struct ui_textbox *)box;
 
 	if(ctx->mode == NAVIGATE) {
 		ctx->mode = EDIT;
 	}
 	else { // EDIT mode
 		ctx->mode = NAVIGATE;
-		if (tb->on_value_entered)
-			tb->on_value_entered(tb->text);
+		if (text_box->on_value_entered)
+			text_box->on_value_entered(text_box);
 
 	}
 
@@ -233,11 +239,11 @@ void ui_click_textbox(struct ui *ctx, const struct ui_box *box)
 /*********************
  * DRAW UI FUNCTIONS *
  *********************/
-void ui_render_box(const struct ui *ctx, const struct ui_box *button, struct ui_style style){
-	int x_start = button->x;
-	int x_end = x_start + button->w;
-	int y_start = button->y;
-	int y_end = button->y + button->h;
+void ui_render_box(const struct ui *ctx, const struct ui_box *box, struct ui_style style){
+	int x_start = box->x;
+	int x_end = x_start + box->w;
+	int y_start = box->y;
+	int y_end = box->y + box->h;
 
 	for (int x = x_start; x <= x_end; ++x) {
 		render_cell(x, y_start, style.horizontal_border);
@@ -255,11 +261,17 @@ void ui_render_box(const struct ui *ctx, const struct ui_box *button, struct ui_
 	}
 }
 
-void ui_render_button(const struct ui *ctx, const struct ui_box *button, struct ui_style style)
+void ui_render_label(const struct ui *ctx, const struct ui_label *label)
 {
-	ui_render_box(ctx, button, style);
-	const struct ui_button* bd = (const struct ui_button*)button;
-	render_text(button->x + 1, button->y + 1, bd->text);
+	ui_render_box(ctx, &label->box, idle_style);
+	render_text(label->box.x + 1, label->box.y + 1, label->text);
+}
+
+void ui_render_button(const struct ui *ctx, const struct ui_box *box, struct ui_style style)
+{
+	ui_render_box(ctx, box, style);
+	const struct ui_button* button = (const struct ui_button*)box;
+	render_text(box->x + 1, box->y + 1, button->text);
 }
 
 void ui_render_checkbox(const struct ui *ctx, const struct ui_box *check_box, struct ui_style style)
@@ -272,8 +284,13 @@ void ui_render_checkbox(const struct ui *ctx, const struct ui_box *check_box, st
 
 void ui_render_textbox(const struct ui *ctx, const struct ui_box *text_box, struct ui_style style)
 {
-	ui_render_box(ctx, text_box, style);
 	const struct ui_textbox *tb = (const struct ui_textbox *)text_box;
+	int x_end = tb->box.x + tb->box.w;
+	for(int x = tb->box.x; x <= x_end; ++x)
+		render_cell(x, tb->box.y+2, style.horizontal_border);
+
+	render_cell(text_box->x, text_box->y + 1, '>');
+
 	//TODO: render last text_box->box.w chars of text
 	render_text(text_box->x + 1, text_box->y + 1, tb->text);
 
