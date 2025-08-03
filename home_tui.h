@@ -57,6 +57,7 @@ void render_dispose();
 void get_window_size(int *w, int *h);
 
 void render_text(int x, int y, const char *text);
+void render_ftext(int x, int y, const char *format, ...);
 void render_cell(int x, int y, int c);
 
 int get_keyboard_input();

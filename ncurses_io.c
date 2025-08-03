@@ -1,4 +1,5 @@
 #include <ncurses.h>
+#include <stdarg.h>
 
 #include "home_tui.h"
 
@@ -29,6 +30,15 @@ void get_window_size(int *w, int *h) {
 }
 
 void render_text(int x, int y, const char *text) { mvprintw(y, x, "%s", text); }
+
+void render_ftext(int x, int y, const char *format, ...)
+{
+	va_list args;
+	va_start(args, format);
+	move(y, x);
+	vw_printw(stdscr, format, args);
+	va_end(args);
+}
 
 void render_cell(int x, int y, int c) { mvaddch(y, x, c); }
 
