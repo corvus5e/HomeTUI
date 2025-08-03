@@ -1,7 +1,7 @@
-#include <ncurses.h>
+#include "home_tui.h"
 
-#include "HomeTUI.h"
 #include <string.h>
+#include <stdio.h>
 
 int calcelled = 0;
 struct ui_label *label;
@@ -14,7 +14,7 @@ void onTextEntered(struct ui_textbox *textbox){
 
 int main()
 {
-	render_init();
+	render_init(-1);
 
 	struct ui *context = ui_create();
 	if (!context) {
@@ -30,7 +30,7 @@ int main()
 
 	ui_render(context); // First render
 	while (!calcelled) {
-		ui_process_input(context, getch());
+		ui_process_input(context, get_keyboard_input());
 		ui_render(context);
 	}
 

@@ -1,7 +1,7 @@
-src=main.c HomeTUI.c ncurses_renderer.c
-target=window
+src=main.c home_tui.c ncurses_io.c
+target=tui_example
 
-main: 
+main:
 	gcc -std=c11 -g -Wall $(src) -lncurses -o $(target)
 
 run:

@@ -46,12 +46,17 @@ struct ui_textbox  *ui_add_textbox(struct ui *ctx, int x, int y, int w, int h, c
 void ui_render(const struct ui* ctx);
 void ui_process_input(struct ui *ctx, int key);
 
-/* External render function */
-void render_init();
+/*
+ * External render and user input functions
+*/
+void render_init(int input_timeout_milliseconds);
 void render_update();
 void render_clear();
 void render_dispose();
+
 void render_text(int x, int y, const char *text);
 void render_cell(int x, int y, int c);
+
+int get_keyboard_input();
 
 #endif

@@ -1,4 +1,4 @@
-#include "HomeTUI.h"
+#include "home_tui.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -69,14 +69,14 @@ void ui_render_control(const struct ui *ctx, const struct ui_control control,
 
 struct ui *ui_create(void)
 {
-	struct ui *context = (struct ui *)malloc(sizeof(struct ui));
-	if (!context)
+	struct ui *ctx = (struct ui *)malloc(sizeof(struct ui));
+	if (!ctx)
 		return NULL;
 
-	context->ui_controls_size = 0;
-	context->selected = -1;
+	ctx->ui_controls_size = 0;
+	ctx->selected = -1;
 
-	return context;
+	return ctx;
 }
 
 void ui_render(const struct ui *ctx)
@@ -234,7 +234,6 @@ void ui_click_textbox(struct ui *ctx, const struct ui_box *box)
 	}
 
 }
-
 
 /*********************
  * DRAW UI FUNCTIONS *

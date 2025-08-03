@@ -1,12 +1,14 @@
 #include <ncurses.h>
 
-void render_init()
+#include "home_tui.h"
+
+void render_init(int timeout_ms)
 {
 	initscr();
 	cbreak();
 	noecho();
 	curs_set(0);
-	timeout(-1);
+	timeout(timeout_ms);
 }
 
 void render_update() { refresh(); }
@@ -24,3 +26,5 @@ void render_dispose()
 void render_text(int x, int y, const char *text) { mvprintw(y, x, "%s", text); }
 
 void render_cell(int x, int y, int c) { mvaddch(y, x, c); }
+
+int get_keyboard_input() { return getch(); }
