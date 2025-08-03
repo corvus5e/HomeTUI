@@ -62,4 +62,8 @@ void render_cell(int x, int y, int c);
 
 int get_keyboard_input();
 
+/* Some non-prontable key codes */
+#define ESC 27
+#define RESIZE 0632
+
 #endif
