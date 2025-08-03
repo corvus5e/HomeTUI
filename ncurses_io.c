@@ -23,6 +23,11 @@ void render_dispose()
 	endwin();
 }
 
+void get_window_size(int *w, int *h) {
+	*w = COLS;
+	*h = LINES;
+}
+
 void render_text(int x, int y, const char *text) { mvprintw(y, x, "%s", text); }
 
 void render_cell(int x, int y, int c) { mvaddch(y, x, c); }

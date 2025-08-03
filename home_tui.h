@@ -54,6 +54,8 @@ void render_update();
 void render_clear();
 void render_dispose();
 
+void get_window_size(int *w, int *h);
+
 void render_text(int x, int y, const char *text);
 void render_cell(int x, int y, int c);
 

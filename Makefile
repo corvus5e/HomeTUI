@@ -1,4 +1,4 @@
-src=main.c home_tui.c ncurses_io.c
+src=tui_example.c home_tui.c ncurses_io.c
 target=tui_example
 
 main:
