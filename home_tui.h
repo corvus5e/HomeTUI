@@ -54,6 +54,7 @@ void render_update();
 void render_clear();
 void render_dispose();
 
+void set_input_timeout(int input_timeout_milliseconds);
 void get_window_size(int *w, int *h);
 
 void render_text(int x, int y, const char *text);
@@ -62,7 +63,7 @@ void render_cell(int x, int y, int c);
 
 int get_keyboard_input();
 
-/* Some non-prontable key codes */
+/* Some non-printable key codes */
 #define ESC 27
 #define RESIZE 0632
 

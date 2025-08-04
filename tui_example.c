@@ -31,7 +31,9 @@ int main()
 	ui_render(ctx); // First render
 	while (!calcelled) {
 		ui_process_input(ctx, get_keyboard_input());
+		render_clear();
 		ui_render(ctx);
+		render_update();
 	}
 
 	render_dispose();

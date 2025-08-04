@@ -24,7 +24,13 @@ void render_dispose()
 	endwin();
 }
 
-void get_window_size(int *w, int *h) {
+void set_input_timeout(int input_timeout_milliseconds)
+{
+	timeout(input_timeout_milliseconds);
+}
+
+void get_window_size(int *w, int *h)
+{
 	*w = COLS;
 	*h = LINES;
 }

@@ -81,15 +81,11 @@ struct ui *ui_create(void)
 
 void ui_render(const struct ui *ctx)
 {
-	render_clear();
-
 	for (int i = 0; i < ctx->ui_controls_size; ++i)
 		ui_render_control(ctx, ctx->ui_controls[i], i == ctx->selected ? hovered_style : idle_style);
 
 	for(int i = 0; i < ctx->ui_lables_size; ++i)
 		ui_render_label(ctx, ctx->ui_labels[i]);
-
-	render_update();
 }
 
 void ui_process_input_navigate(struct ui *ctx, int key) 
