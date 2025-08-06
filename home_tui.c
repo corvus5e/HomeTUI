@@ -282,14 +282,15 @@ void ui_render_textbox(const struct ui *ctx, const struct ui_box *text_box, stru
 	const struct ui_textbox *tb = (const struct ui_textbox *)text_box;
 	int x_end = tb->box.x + tb->box.w;
 	for(int x = tb->box.x; x <= x_end; ++x)
-		render_cell(x, tb->box.y+2, style.horizontal_border);
+		render_cell(x, tb->box.y + 2, style.horizontal_border);
 
 	render_cell(text_box->x, text_box->y + 1, '>');
 
 	//TODO: render last text_box->box.w chars of text
 	render_text(text_box->x + 1, text_box->y + 1, tb->text);
 
-	if(ctx->mode == EDIT) {
+	if (ctx->ui_controls[ctx->selected].box == text_box && //aka isSelected
+	    ctx->mode == EDIT) {
 		int n = strlen(tb->text);
 		render_cell(text_box->x + 1 + n, text_box->y + 1, '|');
 	}

@@ -26,6 +26,7 @@ int main()
 	ui_add_button(ctx, 1, 6, 7, 2, "Cancel", onCancelClicked);
 	ui_add_checkbox(ctx, 1, 10, 1, NULL);
 	ui_add_textbox(ctx, 1, 15, 15, 2, "Enter name", onTextEntered);
+	ui_add_textbox(ctx, 18, 15, 15, 2, "Enter sirname", NULL);
 	label = ui_add_label(ctx, 1, 20, 15, 2, "Label");
 
 	ui_render(ctx); // First render
