@@ -4,13 +4,21 @@
 #include <stdio.h>
 
 int calcelled = 0;
-struct ui_label *label;
 
-void onCancelClicked() { calcelled = 1; }
+struct OnSaveArgs {
+	struct ui_label *label;
+	struct ui_textbox *name;
+};
 
-void onTextEntered(struct ui_textbox *textbox){
-	strcpy(label->text, textbox->text);
+void onCancelClicked(struct ui_button *button, void *arg) { calcelled = 1; }
+
+void onSaveClicked(struct ui_button *button, void *arg)
+{
+	struct OnSaveArgs *args = (struct OnSaveArgs*)(arg);
+	strcpy(args->label->text, args->name->text);
+	calcelled = 1;
 }
+
 
 int main()
 {
@@ -22,12 +30,14 @@ int main()
 		return 1;
 	}
 
-	ui_add_button(ctx, 1, 1, 5, 2, "OK", NULL);
-	ui_add_button(ctx, 1, 6, 7, 2, "Cancel", onCancelClicked);
+	struct OnSaveArgs args;
+
+	args.label = ui_add_label(ctx, 1, 20, 35, 2, "Label");
+	ui_add_button(ctx, 1, 1, 5, 2, "Save", onSaveClicked, &args);
+	ui_add_button(ctx, 1, 6, 7, 2, "Cancel", onCancelClicked, NULL);
 	ui_add_checkbox(ctx, 1, 10, 1, NULL);
-	ui_add_textbox(ctx, 1, 15, 15, 2, "Enter name", onTextEntered);
+	args.name = ui_add_textbox(ctx, 1, 15, 15, 2, "Enter name", NULL);
 	ui_add_textbox(ctx, 18, 15, 15, 2, "Enter sirname", NULL);
-	label = ui_add_label(ctx, 1, 20, 15, 2, "Label");
 
 	ui_render(ctx); // First render
 	while (!calcelled) {

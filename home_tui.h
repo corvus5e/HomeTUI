@@ -5,7 +5,7 @@ struct ui_checkbox;
 struct ui_textbox;
 struct ui_button;
 
-typedef void (*onButtonClick)(struct ui_button *);
+typedef void (*onButtonClick)(struct ui_button *, void * arg);
 typedef void (*onCheckBoxClick)(struct ui_checkbox *);
 typedef void (*onTextBoxTextEntered)(struct ui_textbox *);
 
@@ -22,6 +22,7 @@ struct ui_button {
 	struct ui_box box;
 	char *text;
 	onButtonClick on_click;
+	void * on_click_arg;
 };
 
 struct ui_checkbox {
@@ -39,7 +40,7 @@ struct ui_textbox {
 struct ui* ui_create(void);
 
 struct ui_label    *ui_add_label(struct ui *ctx, int x, int y, int w, int h, char *text);
-struct ui_button   *ui_add_button(struct ui *ctx, int x, int y, int w, int h, char *text, onButtonClick);
+struct ui_button   *ui_add_button(struct ui *ctx, int x, int y, int w, int h, char *text, onButtonClick, void *);
 struct ui_checkbox *ui_add_checkbox(struct ui *ctx, int x, int y, int state, onCheckBoxClick);
 struct ui_textbox  *ui_add_textbox(struct ui *ctx, int x, int y, int w, int h, char *initial_text, onTextBoxTextEntered);
 

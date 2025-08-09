@@ -152,7 +152,7 @@ struct ui_label *ui_add_label(struct ui *ctx, int x, int y, int w, int h, char *
 }
 
 struct ui_button *ui_add_button(struct ui *ctx, int x, int y, int w, int h, char *text,
-		  onButtonClick on_click)
+		  onButtonClick on_click, void * arg)
 {
 	struct ui_button *button = (struct ui_button *)malloc(sizeof(struct ui_button));
 
@@ -161,6 +161,7 @@ struct ui_button *ui_add_button(struct ui *ctx, int x, int y, int w, int h, char
 
 	button->text = text; //TODO: copy, for now usilg litterals;
 	button->on_click = on_click;
+	button->on_click_arg = arg;
 
 	ui_add_control(ctx, (struct ui_box*)button, BUTTON);
 
@@ -204,7 +205,7 @@ void ui_click_button(struct ui *ctx, const struct ui_box *box)
 {
 	struct ui_button *button = (struct ui_button *)box;
 	if (button->on_click)
-		button->on_click(button);
+		button->on_click(button, button->on_click_arg);
 }
 
 void ui_click_checkbox(struct ui *ctx, const struct ui_box *box)
