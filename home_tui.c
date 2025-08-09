@@ -74,6 +74,7 @@ struct ui *ui_create(void)
 		return NULL;
 
 	ctx->ui_controls_size = 0;
+	ctx->ui_lables_size = 0;
 	ctx->selected = -1;
 
 	return ctx;
