@@ -50,12 +50,13 @@ void ui_click_button(struct ui *ctx, const struct ui_box *);
 void ui_click_checkbox(struct ui *ctx, const struct ui_box *);
 void ui_click_textbox(struct ui *ctx, const struct ui_box *);
 
-void ui_click_control(struct ui *ctx, const struct ui_control control)
+int ui_click_control(struct ui *ctx, const struct ui_control control)
 {
 	static void (*ui_click_[TYPE_COUNT])(struct ui *,
 					     const struct ui_box *) = {
 	    NULL, ui_click_button, ui_click_textbox, ui_click_checkbox};
 	ui_click_[control.type](ctx, control.box);
+	return 1;
 }
 
 void ui_render_control(const struct ui *ctx, const struct ui_control control,
@@ -89,21 +90,23 @@ void ui_render(const struct ui *ctx)
 		ui_render_label(ctx, ctx->ui_labels[i]);
 }
 
-void ui_process_input_navigate(struct ui *ctx, int key) 
+int ui_process_input_navigate(struct ui *ctx, int key) 
 {
 	switch (key) {
 	case 'j':
 		if(ctx->selected + 1 < ctx->ui_controls_size)
 			ctx->selected += 1;
-		break;
+		return 1;
 	case 'k':
 		if(ctx->selected > 0)
 			ctx->selected -= 1;
-		break;
+		return 1;
 	}
+
+	return 0;
 }
 
-void ui_process_input_edit(struct ui *ctx, int key)
+int ui_process_input_edit(struct ui *ctx, int key)
 {
 	//NOTE: Currently only textbox is editable
 	struct ui_textbox *tb = (struct ui_textbox*)ctx->ui_controls[ctx->selected].box;
@@ -111,30 +114,31 @@ void ui_process_input_edit(struct ui *ctx, int key)
 		size_t n = strlen(tb->text);
 		if(n > 0)
 			tb->text[n-1] = '\0';
+		return 1;
 	}
 	else if(key > 31 && key < 127) { /* Visual chars*/
 		size_t n = strlen(tb->text);
 		tb->text[n] = key; //TODO: Use vector here, assume ehough memory for now
+		return 1;
 	}
 
+	return 0;
 }
 
 
-void ui_process_input(struct ui *ctx, int key)
+int ui_process_input(struct ui *ctx, int key)
 {
-	if(key == 10 || key == 13) {
-		ui_click_control(ctx, ctx->ui_controls[ctx->selected]);
-		return;
-	}
+	if(key == 10 || key == 13)
+		return ui_click_control(ctx, ctx->ui_controls[ctx->selected]);
 
 	switch (ctx->mode) {
 	case NAVIGATE:
-			ui_process_input_navigate(ctx, key);
-		break;
+			return ui_process_input_navigate(ctx, key);
 	case EDIT:
-			ui_process_input_edit(ctx, key);
-		break;
+			return ui_process_input_edit(ctx, key);
 	}
+
+	return 0;
 }
 
 struct ui_label *ui_add_label(struct ui *ctx, int x, int y, int w, int h, char *text)

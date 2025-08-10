@@ -45,7 +45,8 @@ struct ui_checkbox *ui_add_checkbox(struct ui *ctx, int x, int y, int state, onC
 struct ui_textbox  *ui_add_textbox(struct ui *ctx, int x, int y, int w, int h, char *initial_text, onTextBoxTextEntered);
 
 void ui_render(const struct ui* ctx);
-void ui_process_input(struct ui *ctx, int key);
+/* Returns 1 if the input was handled, 0 - if was ignored or had no handler*/
+int ui_process_input(struct ui *ctx, int key);
 
 /*
  * External render and user input functions
