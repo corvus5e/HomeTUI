@@ -178,6 +178,7 @@ struct ui_checkbox *ui_add_checkbox(struct ui *ctx, int x, int y, int state, onC
 
 	struct ui_box box = {x, y, 4, 2};
 	check_box->box = box;
+	check_box->is_checked = state;
 	check_box->on_click = on_click;
 
 	ui_add_control(ctx, (struct ui_box*)check_box, CHECK_BOX);
