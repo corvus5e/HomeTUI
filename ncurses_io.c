@@ -17,10 +17,6 @@ void render_clear() { erase(); }
 
 void render_dispose()
 {
-	timeout(-1);
-	mvaddstr(LINES - 1, 0, "Press any key to exit ...");
-	refresh();
-	getch();
 	endwin();
 }
 
