@@ -16,7 +16,6 @@ void onSaveClicked(struct ui_button *button, void *arg)
 {
 	struct OnSaveArgs *args = (struct OnSaveArgs*)(arg);
 	strcpy(args->label->text, args->name->text);
-	calcelled = 1;
 }
 
 
