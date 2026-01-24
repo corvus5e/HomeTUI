@@ -31,7 +31,13 @@ struct ui_style {
 	char vertical_border;
 	char horizontal_border;
 	char corner;
-} idle_style = {'|', '-', '+'}, hovered_style = {'|', '=', '*'};
+
+	short fg_color_id;
+	short bg_color_id;
+	short text_fg_color_id;
+	short text_bg_color_id;
+} idle_style = {'|', '-', '+', -1, -1, -1, -1},
+  hovered_style = {'|', '=', '*', 3, -1, 30, -1};
 
 int ui_add_control(struct ui *ctx, struct ui_box *box, enum ui_type type)
 {
@@ -247,6 +253,8 @@ void ui_render_box(const struct ui *ctx, const struct ui_box *box, struct ui_sty
 	int y_start = box->y;
 	int y_end = box->y + box->h;
 
+	set_color(style.fg_color_id, style.bg_color_id);
+
 	for (int x = x_start; x <= x_end; ++x) {
 		render_cell(x, y_start, style.horizontal_border);
 		render_cell(x, y_end, style.horizontal_border);
@@ -261,6 +269,8 @@ void ui_render_box(const struct ui *ctx, const struct ui_box *box, struct ui_sty
 		render_cell(x_start, y, style.vertical_border);
 		render_cell(x_end, y, style.vertical_border);
 	}
+
+	reset_colors();
 }
 
 void ui_render_label(const struct ui *ctx, const struct ui_label *label)

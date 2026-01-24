@@ -63,10 +63,19 @@ void render_text(int x, int y, const char *text);
 void render_ftext(int x, int y, const char *format, ...);
 void render_cell(int x, int y, int c);
 
+void set_color(short foreground_color_id, short backgroung_color_id);
+void reset_colors();
+
 int get_keyboard_input();
 
 /* Some non-printable key codes */
 #define ESC 27
 #define RESIZE 0632
+
+/* Color constants */
+#define COLOR_DARK_GREEN   22
+#define COLOR_MEDIUM_GREEN 34
+#define COLOR_BRIGHT_GREEN 46
+#define COLOR_NEON_GREEN   118
 
 #endif
