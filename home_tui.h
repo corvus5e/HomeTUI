@@ -1,6 +1,12 @@
 #ifndef _HOME_TUI_H_
 #define _HOME_TUI_H_
 
+#define USE_UTF8 1
+
+#if USE_UTF8
+#include <wchar.h>
+#endif
+
 struct ui_checkbox;
 struct ui_textbox;
 struct ui_button;
@@ -61,7 +67,12 @@ void get_window_size(int *w, int *h);
 
 void render_text(int x, int y, const char *text);
 void render_ftext(int x, int y, const char *format, ...);
+
+#if USE_UTF8
+void render_cell(int x, int y, const wchar_t*);
+#else
 void render_cell(int x, int y, int c);
+#endif
 
 void set_color(short foreground_color_id, short backgroung_color_id);
 void reset_colors();

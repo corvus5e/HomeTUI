@@ -27,17 +27,45 @@ struct ui {
 	enum ui_mode mode;
 };
 
+#if USE_UTF8
+
+#define TEXT_BOX_INVITE_SYMBOL L">"
+#define TEXT_BOX_CLOSING_INPUT L"|"
+
 struct ui_style {
-	char vertical_border;
-	char horizontal_border;
-	char corner;
+	const wchar_t* vertical_border;
+	const wchar_t* horizontal_border;
+	const wchar_t* left_upper_corner;
+	const wchar_t* left_bottom_corner;
+	const wchar_t* right_upper_corner;
+	const wchar_t* right_bottom_corner;
 
 	short fg_color_id;
 	short bg_color_id;
 	short text_fg_color_id;
 	short text_bg_color_id;
-} idle_style = {'|', '-', '+', -1, -1, -1, -1},
-  hovered_style = {'|', '=', '*', 3, -1, 30, -1};
+} idle_style = {L"│", L"─", L"╭", L"╰", L"╮", L"╯", -1, -1, -1, -1},
+  hovered_style = {L"┃", L"━", L"┏", L"┗", L"┓", L"┛", 3, -1, 30, -1};
+#else
+#define TEXT_BOX_INVITE_SYMBOL '>'
+#define TEXT_BOX_CLOSING_INPUT '|'
+
+struct ui_style {
+	char vertical_border;
+	char horizontal_border;
+	char left_upper_corner;
+	char left_bottom_corner;
+	char right_upper_corner;
+	char right_bottom_corner;
+
+
+	short fg_color_id;
+	short bg_color_id;
+	short text_fg_color_id;
+	short text_bg_color_id;
+} idle_style = {'|', '-', '+', '+', '+', '+', -1, -1, -1, -1},
+  hovered_style = {'|', '=', '*', '*', '*', '*', 3, -1, 30, -1};
+#endif
 
 int ui_add_control(struct ui *ctx, struct ui_box *box, enum ui_type type)
 {
@@ -260,10 +288,10 @@ void ui_render_box(const struct ui *ctx, const struct ui_box *box, struct ui_sty
 		render_cell(x, y_end, style.horizontal_border);
 	}
 
-	render_cell(x_start, y_start, style.corner);
-	render_cell(x_end, y_start, style.corner);
-	render_cell(x_start, y_end, style.corner);
-	render_cell(x_end, y_end, style.corner);
+	render_cell(x_start, y_start, style.left_upper_corner);
+	render_cell(x_end, y_start, style.right_upper_corner);
+	render_cell(x_start, y_end, style.left_bottom_corner);
+	render_cell(x_end, y_end, style.right_bottom_corner);
 
 	for (int y = y_start + 1; y < y_end; ++y) {
 		render_cell(x_start, y, style.vertical_border);
@@ -304,7 +332,7 @@ void ui_render_textbox(const struct ui *ctx, const struct ui_box *text_box, stru
 	for(int x = tb->box.x; x <= x_end; ++x)
 		render_cell(x, tb->box.y + 2, style.horizontal_border);
 
-	render_cell(text_box->x, text_box->y + 1, '>');
+	render_cell(text_box->x, text_box->y + 1, TEXT_BOX_INVITE_SYMBOL);
 
 	reset_colors();
 
@@ -315,7 +343,7 @@ void ui_render_textbox(const struct ui *ctx, const struct ui_box *text_box, stru
 	    ctx->mode == EDIT) {
 		int n = strlen(tb->text);
 		set_color(style.fg_color_id, style.bg_color_id);
-		render_cell(text_box->x + 1 + n, text_box->y + 1, '|');
+		render_cell(text_box->x + 1 + n, text_box->y + 1, TEXT_BOX_CLOSING_INPUT);
 		reset_colors();
 	}
 }

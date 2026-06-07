@@ -1,10 +1,14 @@
+#include <locale.h>
 #include <ncurses.h>
 #include <stdarg.h>
+#include <string.h>
+#include <wchar.h>
 
 #include "home_tui.h"
 
 void render_init(int timeout_ms)
 {
+	setlocale(LC_ALL, "");
 	initscr();
 	cbreak();
 	noecho();
@@ -48,7 +52,15 @@ void render_ftext(int x, int y, const char *format, ...)
 	va_end(args);
 }
 
+#if USE_UTF8
+void render_cell(int x, int y, const wchar_t* c) {
+	cchar_t complex_char;
+	setcchar(&complex_char, c, WA_NORMAL, 0, NULL);
+	mvadd_wch(y, x, &complex_char);
+}
+#else
 void render_cell(int x, int y, int c) { mvaddch(y, x, c); }
+#endif
 
 void set_color(short fg, short bg) {
 	if(fg == -1 && bg == -1) {
