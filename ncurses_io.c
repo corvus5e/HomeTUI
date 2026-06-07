@@ -53,9 +53,9 @@ void render_ftext(int x, int y, const char *format, ...)
 }
 
 #if USE_UTF8
-void render_cell(int x, int y, const wchar_t* c) {
+void render_cell(int x, int y, const wchar_t c) {
 	cchar_t complex_char;
-	setcchar(&complex_char, c, WA_NORMAL, 0, NULL);
+	setcchar(&complex_char, &c, WA_NORMAL, 0, NULL);
 	mvadd_wch(y, x, &complex_char);
 }
 #else

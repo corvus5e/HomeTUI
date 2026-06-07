@@ -69,7 +69,7 @@ void render_text(int x, int y, const char *text);
 void render_ftext(int x, int y, const char *format, ...);
 
 #if USE_UTF8
-void render_cell(int x, int y, const wchar_t*);
+void render_cell(int x, int y, const wchar_t);
 #else
 void render_cell(int x, int y, int c);
 #endif

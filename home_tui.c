@@ -29,23 +29,23 @@ struct ui {
 
 #if USE_UTF8
 
-#define TEXT_BOX_INVITE_SYMBOL L">"
-#define TEXT_BOX_CLOSING_INPUT L"|"
+#define TEXT_BOX_INVITE_SYMBOL L'>'
+#define TEXT_BOX_CLOSING_INPUT L'|'
 
 struct ui_style {
-	const wchar_t* vertical_border;
-	const wchar_t* horizontal_border;
-	const wchar_t* left_upper_corner;
-	const wchar_t* left_bottom_corner;
-	const wchar_t* right_upper_corner;
-	const wchar_t* right_bottom_corner;
+	const wchar_t vertical_border;
+	const wchar_t horizontal_border;
+	const wchar_t left_upper_corner;
+	const wchar_t left_bottom_corner;
+	const wchar_t right_upper_corner;
+	const wchar_t right_bottom_corner;
 
 	short fg_color_id;
 	short bg_color_id;
 	short text_fg_color_id;
 	short text_bg_color_id;
-} idle_style = {L"│", L"─", L"╭", L"╰", L"╮", L"╯", -1, -1, -1, -1},
-  hovered_style = {L"┃", L"━", L"┏", L"┗", L"┓", L"┛", 3, -1, 30, -1};
+} idle_style = {L'│', L'─', L'╭', L'╰', L'╮', L'╯', -1, -1, -1, -1},
+  hovered_style = {L'┃', L'━', L'┏', L'┗', L'┓', L'┛', 3, -1, 30, -1};
 #else
 #define TEXT_BOX_INVITE_SYMBOL '>'
 #define TEXT_BOX_CLOSING_INPUT '|'
