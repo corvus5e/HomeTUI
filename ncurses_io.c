@@ -2,7 +2,6 @@
 #include <ncurses.h>
 #include <stdarg.h>
 #include <string.h>
-#include <wchar.h>
 
 #include "home_tui.h"
 
@@ -41,7 +40,14 @@ void get_window_size(int *w, int *h)
 	*h = LINES;
 }
 
-void render_text(int x, int y, const char *text) { mvprintw(y, x, "%s", text); }
+void render_text(int x, int y, const char *text)
+{
+#ifdef USE_UTF8 //TODO: Handle some how both char and wchar_t
+	mvprintw(y, x, "%s", text);
+#else
+	mvprintw(y, x, "%s", text);
+#endif
+}
 
 void render_ftext(int x, int y, const char *format, ...)
 {
@@ -52,15 +58,15 @@ void render_ftext(int x, int y, const char *format, ...)
 	va_end(args);
 }
 
-#if USE_UTF8
-void render_cell(int x, int y, const wchar_t c) {
-	cchar_t complex_char;
-	setcchar(&complex_char, &c, WA_NORMAL, 0, NULL);
-	mvadd_wch(y, x, &complex_char);
-}
-#else
-void render_cell(int x, int y, int c) { mvaddch(y, x, c); }
+void render_cell(int x, int y, UI_CHAR c) {
+ #if USE_UTF8
+ 	cchar_t complex_char;
+ 	setcchar(&complex_char, &c, WA_NORMAL, 0, NULL);
+ 	mvadd_wch(y, x, &complex_char);
+ #else
+      mvaddch(y, x, c);
 #endif
+}
 
 void set_color(short fg, short bg) {
 	if(fg == -1 && bg == -1) {

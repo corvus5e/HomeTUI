@@ -10,6 +10,9 @@
 #define CHAR_L(ascii_char, utf8_str) ascii_char
 #endif
 
+struct ui_box;
+#define UI_BOX(obj) ((struct ui_box*)(obj))
+
 struct ui_checkbox;
 struct ui_textbox;
 struct ui_button;
@@ -18,40 +21,15 @@ typedef void (*onButtonClick)(struct ui_button *, void * arg);
 typedef void (*onCheckBoxClick)(struct ui_checkbox *);
 typedef void (*onTextBoxTextEntered)(struct ui_textbox *);
 
-struct ui_box {
-	int x, y, w, h;
-};
-
-struct ui_label {
-	struct ui_box box;
-	char *text;
-};
-
-struct ui_button {
-	struct ui_box box;
-	char *text;
-	onButtonClick on_click;
-	void * on_click_arg;
-};
-
-struct ui_checkbox {
-	struct ui_box box;
-	int is_checked;
-	onCheckBoxClick on_click;
-};
-
-struct ui_textbox {
-	struct ui_box box;
-	char *text;
-	onTextBoxTextEntered on_value_entered;
-};
-
 struct ui* ui_create(void);
 
-struct ui_label    *ui_add_label(struct ui *ctx, int x, int y, int w, int h, char *text);
+struct ui_box      *ui_add_box(struct ui *ctx, int x, int y, int w, int h, const char *text);
 struct ui_button   *ui_add_button(struct ui *ctx, int x, int y, int w, int h, char *text, onButtonClick, void *);
 struct ui_checkbox *ui_add_checkbox(struct ui *ctx, int x, int y, int state, onCheckBoxClick);
 struct ui_textbox  *ui_add_textbox(struct ui *ctx, int x, int y, int w, int h, char *initial_text, onTextBoxTextEntered);
+
+void ui_set_text(struct ui_box*, const char*);
+const char* ui_get_text(struct ui_box*);
 
 void ui_render(const struct ui* ctx);
 /* Returns 1 if the input was handled, 0 - if was ignored or had no handler*/
@@ -71,11 +49,7 @@ void get_window_size(int *w, int *h);
 void render_text(int x, int y, const char *text);
 void render_ftext(int x, int y, const char *format, ...);
 
-#ifdef USE_UTF8
-void render_cell(int x, int y, const wchar_t);
-#else
-void render_cell(int x, int y, int c);
-#endif
+void render_cell(int x, int y, UI_CHAR);
 
 void set_color(short foreground_color_id, short backgroung_color_id);
 void reset_colors();
