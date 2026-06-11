@@ -56,9 +56,9 @@ int ui_add_control(struct ui *ctx, struct ui_box *box, enum ui_type type)
 }
 
 void ui_render_label(const struct ui *ctx, const struct ui_label *);
-void ui_render_button(const struct ui *ctx, const struct ui_box *, struct ui_style);
-void ui_render_textbox(const struct ui *ctx, const struct ui_box *, struct ui_style);
-void ui_render_checkbox(const struct ui *ctx, const struct ui_box *, struct ui_style);
+void ui_render_button(const struct ui *ctx, const struct ui_box *, const struct ui_style*);
+void ui_render_textbox(const struct ui *ctx, const struct ui_box *, const struct ui_style*);
+void ui_render_checkbox(const struct ui *ctx, const struct ui_box *, const struct ui_style*);
 
 void ui_click_button(struct ui *ctx, const struct ui_box *);
 void ui_click_checkbox(struct ui *ctx, const struct ui_box *);
@@ -73,10 +73,10 @@ int ui_click_control(struct ui *ctx, const struct ui_control control)
 }
 
 void ui_render_control(const struct ui *ctx, const struct ui_control control,
-		       struct ui_style style)
+		       const struct ui_style* style)
 {
 	static void (*ui_render_[TYPE_COUNT])(
-	    const struct ui *, const struct ui_box *, struct ui_style) = {
+	    const struct ui *, const struct ui_box *, const struct ui_style*) = {
 	    NULL, ui_render_button, ui_render_textbox, ui_render_checkbox};
 	ui_render_[control.type](ctx, control.box, style);
 }
@@ -96,8 +96,9 @@ struct ui *ui_create(void)
 
 void ui_render(const struct ui *ctx)
 {
+	const struct ui_style *styles[2] = {&idle_style, &hovered_style, };
 	for (int i = 0; i < ctx->ui_controls_size; ++i)
-		ui_render_control(ctx, ctx->ui_controls[i], i == ctx->selected ? hovered_style : idle_style);
+		ui_render_control(ctx, ctx->ui_controls[i], styles[i == ctx->selected]);
 
 	for(int i = 0; i < ctx->ui_lables_size; ++i)
 		ui_render_label(ctx, ctx->ui_labels[i]);
@@ -254,27 +255,27 @@ void ui_click_textbox(struct ui *ctx, const struct ui_box *box)
 /*********************
  * DRAW UI FUNCTIONS *
  *********************/
-void ui_render_box(const struct ui *ctx, const struct ui_box *box, struct ui_style style){
+void ui_render_box(const struct ui *ctx, const struct ui_box *box, const struct ui_style *style){
 	int x_start = box->x;
 	int x_end = x_start + box->w;
 	int y_start = box->y;
 	int y_end = box->y + box->h;
 
-	set_color(style.fg_color_id, style.bg_color_id);
+	set_color(style->fg_color_id, style->bg_color_id);
 
 	for (int x = x_start; x <= x_end; ++x) {
-		render_cell(x, y_start, style.horizontal_border);
-		render_cell(x, y_end, style.horizontal_border);
+		render_cell(x, y_start, style->horizontal_border);
+		render_cell(x, y_end, style->horizontal_border);
 	}
 
-	render_cell(x_start, y_start, style.left_upper_corner);
-	render_cell(x_end, y_start, style.right_upper_corner);
-	render_cell(x_start, y_end, style.left_bottom_corner);
-	render_cell(x_end, y_end, style.right_bottom_corner);
+	render_cell(x_start, y_start, style->left_upper_corner);
+	render_cell(x_end, y_start, style->right_upper_corner);
+	render_cell(x_start, y_end, style->left_bottom_corner);
+	render_cell(x_end, y_end, style->right_bottom_corner);
 
 	for (int y = y_start + 1; y < y_end; ++y) {
-		render_cell(x_start, y, style.vertical_border);
-		render_cell(x_end, y, style.vertical_border);
+		render_cell(x_start, y, style->vertical_border);
+		render_cell(x_end, y, style->vertical_border);
 	}
 
 	reset_colors();
@@ -282,18 +283,18 @@ void ui_render_box(const struct ui *ctx, const struct ui_box *box, struct ui_sty
 
 void ui_render_label(const struct ui *ctx, const struct ui_label *label)
 {
-	ui_render_box(ctx, &label->box, idle_style);
+	ui_render_box(ctx, &label->box, &idle_style);
 	render_text(label->box.x + 1, label->box.y + 1, label->text);
 }
 
-void ui_render_button(const struct ui *ctx, const struct ui_box *box, struct ui_style style)
+void ui_render_button(const struct ui *ctx, const struct ui_box *box, const struct ui_style *style)
 {
 	ui_render_box(ctx, box, style);
 	const struct ui_button* button = (const struct ui_button*)box;
 	render_text(box->x + 1, box->y + 1, button->text);
 }
 
-void ui_render_checkbox(const struct ui *ctx, const struct ui_box *check_box, struct ui_style style)
+void ui_render_checkbox(const struct ui *ctx, const struct ui_box *check_box, const struct ui_style *style)
 {
 	ui_render_box(ctx, check_box, style);
 	const struct ui_checkbox *cb = (const struct ui_checkbox *)check_box;
@@ -301,15 +302,15 @@ void ui_render_checkbox(const struct ui *ctx, const struct ui_box *check_box, st
 		    cb->is_checked ? "ON" : "OFF");
 }
 
-void ui_render_textbox(const struct ui *ctx, const struct ui_box *text_box, struct ui_style style)
+void ui_render_textbox(const struct ui *ctx, const struct ui_box *text_box, const struct ui_style *style)
 {
 	const struct ui_textbox *tb = (const struct ui_textbox *)text_box;
 
-	set_color(style.fg_color_id, style.bg_color_id);
+	set_color(style->fg_color_id, style->bg_color_id);
 
 	int x_end = tb->box.x + tb->box.w;
 	for(int x = tb->box.x; x <= x_end; ++x)
-		render_cell(x, tb->box.y + 2, style.horizontal_border);
+		render_cell(x, tb->box.y + 2, style->horizontal_border);
 
 	render_cell(text_box->x, text_box->y + 1, TEXT_BOX_INVITE_SYMBOL);
 
@@ -321,7 +322,7 @@ void ui_render_textbox(const struct ui *ctx, const struct ui_box *text_box, stru
 	if (ctx->ui_controls[ctx->selected].box == text_box && //aka isSelected
 	    ctx->mode == EDIT) {
 		int n = strlen(tb->text);
-		set_color(style.fg_color_id, style.bg_color_id);
+		set_color(style->fg_color_id, style->bg_color_id);
 		render_cell(text_box->x + 1 + n, text_box->y + 1, TEXT_BOX_CLOSING_INPUT);
 		reset_colors();
 	}
