@@ -1,10 +1,13 @@
 #ifndef _HOME_TUI_H_
 #define _HOME_TUI_H_
 
-#define USE_UTF8 1
-
-#if USE_UTF8
+#ifdef USE_UTF8
 #include <wchar.h>
+#define UI_CHAR wchar_t
+#define CHAR_L(ascii_char, utf8_str) utf8_str
+#else
+#define UI_CHAR char
+#define CHAR_L(ascii_char, utf8_str) ascii_char
 #endif
 
 struct ui_checkbox;
@@ -68,7 +71,7 @@ void get_window_size(int *w, int *h);
 void render_text(int x, int y, const char *text);
 void render_ftext(int x, int y, const char *format, ...);
 
-#if USE_UTF8
+#ifdef USE_UTF8
 void render_cell(int x, int y, const wchar_t);
 #else
 void render_cell(int x, int y, int c);

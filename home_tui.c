@@ -27,45 +27,25 @@ struct ui {
 	enum ui_mode mode;
 };
 
-#if USE_UTF8
+struct ui_style {
+	const UI_CHAR vertical_border;
+	const UI_CHAR horizontal_border;
+	const UI_CHAR left_upper_corner;
+	const UI_CHAR left_bottom_corner;
+	const UI_CHAR right_upper_corner;
+	const UI_CHAR right_bottom_corner;
+
+	short fg_color_id;
+	short bg_color_id;
+	short text_fg_color_id;
+	short text_bg_color_id;
+};
+
+struct ui_style idle_style = {CHAR_L('|', L'│'),CHAR_L('-', L'─'), CHAR_L('*', L'╭'), CHAR_L('*', L'╰'), CHAR_L('*', L'╮'),CHAR_L('*', L'╯'), -1, -1, -1, -1};
+struct ui_style hovered_style = {CHAR_L('|', L'┃'), CHAR_L('=', L'━'), CHAR_L('*', L'┏'), CHAR_L('*', L'┗'), CHAR_L('*', L'┓'), CHAR_L('*', L'┛'), 3, -1, 30, -1};
 
 #define TEXT_BOX_INVITE_SYMBOL L'>'
 #define TEXT_BOX_CLOSING_INPUT L'|'
-
-struct ui_style {
-	const wchar_t vertical_border;
-	const wchar_t horizontal_border;
-	const wchar_t left_upper_corner;
-	const wchar_t left_bottom_corner;
-	const wchar_t right_upper_corner;
-	const wchar_t right_bottom_corner;
-
-	short fg_color_id;
-	short bg_color_id;
-	short text_fg_color_id;
-	short text_bg_color_id;
-} idle_style = {L'│', L'─', L'╭', L'╰', L'╮', L'╯', -1, -1, -1, -1},
-  hovered_style = {L'┃', L'━', L'┏', L'┗', L'┓', L'┛', 3, -1, 30, -1};
-#else
-#define TEXT_BOX_INVITE_SYMBOL '>'
-#define TEXT_BOX_CLOSING_INPUT '|'
-
-struct ui_style {
-	char vertical_border;
-	char horizontal_border;
-	char left_upper_corner;
-	char left_bottom_corner;
-	char right_upper_corner;
-	char right_bottom_corner;
-
-
-	short fg_color_id;
-	short bg_color_id;
-	short text_fg_color_id;
-	short text_bg_color_id;
-} idle_style = {'|', '-', '+', '+', '+', '+', -1, -1, -1, -1},
-  hovered_style = {'|', '=', '*', '*', '*', '*', 3, -1, 30, -1};
-#endif
 
 int ui_add_control(struct ui *ctx, struct ui_box *box, enum ui_type type)
 {
@@ -86,8 +66,7 @@ void ui_click_textbox(struct ui *ctx, const struct ui_box *);
 
 int ui_click_control(struct ui *ctx, const struct ui_control control)
 {
-	static void (*ui_click_[TYPE_COUNT])(struct ui *,
-					     const struct ui_box *) = {
+	static void (*ui_click_[TYPE_COUNT])(struct ui *, const struct ui_box *) = {
 	    NULL, ui_click_button, ui_click_textbox, ui_click_checkbox};
 	ui_click_[control.type](ctx, control.box);
 	return 1;
