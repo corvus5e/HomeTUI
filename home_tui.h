@@ -32,6 +32,7 @@ struct ui_textbox  *ui_add_textbox(struct ui *ctx, int x, int y, int w, int h, c
 
 void ui_set_text(struct ui_box*, const char*);
 const char* ui_get_text(struct ui_box*);
+int ui_is_checked(struct ui_checkbox*);
 
 void ui_render(const struct ui* ctx);
 /* Returns 1 if the input was handled, 0 - if was ignored or had no handler*/

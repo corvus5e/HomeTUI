@@ -247,6 +247,10 @@ const char* ui_get_text(struct ui_box *box)
 	return box->text;
 }
 
+int ui_is_checked(struct ui_checkbox *cb) {
+	return cb->is_checked;
+}
+
 /**********************
  * CLICK UI FUNCTIONS *
  **********************/
