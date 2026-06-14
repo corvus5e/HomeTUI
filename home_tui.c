@@ -1,5 +1,6 @@
 #include "home_tui.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -43,9 +44,6 @@ struct ui {
 
 	int selected;
 
-	struct ui_label *ui_labels[CONTROLS_NUM];
-	int ui_lables_size;
-
 	enum ui_mode mode;
 };
 
@@ -68,6 +66,8 @@ struct ui_style hovered_style = {CHAR_L('|', L'┃'), CHAR_L('=', L'━'), CHAR_
 
 #define TEXT_BOX_INVITE_SYMBOL L'>'
 #define TEXT_BOX_CLOSING_INPUT L'|'
+#define CHECK_BOX_ON "ON"
+#define CHECK_BOX_OFF "OFF"
 
 int ui_add_control(struct ui *ctx, struct ui_box *box, enum ui_type type)
 {
@@ -111,8 +111,8 @@ struct ui *ui_create(void)
 		return NULL;
 
 	ctx->ui_controls_size = 0;
-	ctx->ui_lables_size = 0;
 	ctx->selected = -1;
+	ctx->mode = NAVIGATE;
 
 	return ctx;
 }
@@ -180,6 +180,7 @@ struct ui_box *ui_add_box(struct ui *ctx, int x, int y, int w, int h, const char
 	struct ui_box *box = (struct ui_box*)malloc(sizeof(struct ui_box));
 
 	box->x = x; box->y = y; box->w = w; box->h = h;
+	box->text = NULL;
 	ui_set_text(box, text);
 
 	ui_add_control(ctx, box, BOX);
@@ -195,7 +196,8 @@ struct ui_button *ui_add_button(struct ui *ctx, int x, int y, int w, int h, char
 	struct ui_box box = {x, y, w, h, NULL};
 	button->box = box;
 
-	button->box.text = text; //TODO: copy, for now usilg litterals;
+	ui_set_text(UI_BOX(button), text);
+
 	button->on_click = on_click;
 	button->on_click_arg = arg;
 
@@ -212,6 +214,7 @@ struct ui_checkbox *ui_add_checkbox(struct ui *ctx, int x, int y, int state, onC
 	check_box->box = box;
 	check_box->is_checked = state;
 	check_box->on_click = on_click;
+	ui_set_text(UI_BOX(check_box), state ? CHECK_BOX_ON : CHECK_BOX_OFF);
 
 	ui_add_control(ctx, (struct ui_box*)check_box, CHECK_BOX);
 
@@ -263,6 +266,7 @@ void ui_click_checkbox(struct ui *ctx, const struct ui_box *box)
 {
 	struct ui_checkbox *check_box = (struct ui_checkbox *)box;
 	check_box->is_checked = !check_box->is_checked;
+	ui_set_text(UI_BOX(check_box), check_box->is_checked ? CHECK_BOX_ON : CHECK_BOX_OFF);
 	if (check_box->on_click)
 		check_box->on_click(check_box);
 }
@@ -322,8 +326,6 @@ void ui_render_button(const struct ui *ctx, const struct ui_box *box, const stru
 
 void ui_render_checkbox(const struct ui *ctx, const struct ui_box *check_box, const struct ui_style *style)
 {
-	const struct ui_checkbox *cb = (const struct ui_checkbox *)check_box;
-	ui_set_text(check_box, cb->is_checked ? "ON" : "OFF");
 	ui_render_box(ctx, check_box, style);
 }
 
@@ -344,11 +346,20 @@ void ui_render_textbox(const struct ui *ctx, const struct ui_box *text_box, cons
 	//TODO: render last text_box->box.w chars of text
 	render_text(text_box->x + 1, text_box->y + 1, tb->box.text);
 
-	if (ctx->ui_controls[ctx->selected].box == text_box && //aka isSelected
+	if (ctx->selected > 0 && ctx->ui_controls[ctx->selected].box == text_box && //aka isSelected
 	    ctx->mode == EDIT) {
 		int n = strlen(tb->box.text);
 		set_color(style->fg_color_id, style->bg_color_id);
 		render_cell(text_box->x + 1 + n, text_box->y + 1, TEXT_BOX_CLOSING_INPUT);
 		reset_colors();
+	}
+}
+
+/* Extensions */
+void render_block(const UI_CHAR *data, int x, int y, int w, int h) {
+	for(int j =  0; j < h; ++j) {
+		for(int i = 0; i < w; ++i) {
+			render_cell(x + i, y + j, data[j*w + i]);
+		}
 	}
 }

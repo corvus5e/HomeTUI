@@ -8,7 +8,6 @@
             "program": "${workspaceFolder}/tui_example",
             "args": [],
             "cwd": "${workspaceFolder}",
-            "preLaunchTask": "make",
             "terminal": "integrated"
         },
         {

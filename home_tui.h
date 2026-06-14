@@ -1,6 +1,8 @@
 #ifndef _HOME_TUI_H_
 #define _HOME_TUI_H_
 
+#include <stddef.h>
+
 #ifdef USE_UTF8
 #include <wchar.h>
 #define UI_CHAR wchar_t
@@ -55,6 +57,16 @@ void set_color(short foreground_color_id, short backgroung_color_id);
 void reset_colors();
 
 int get_keyboard_input();
+
+/* Some render extensions */
+void render_block(const UI_CHAR *data, int x, int y, int w, int h);
+
+/* Figlet-like textures */
+struct TextureAtlas;
+const struct TextureAtlas* load_figlet_texture(const char *path);
+void get_texture_dims(const struct TextureAtlas*, int *number, int *width, int *height);
+UI_CHAR* get_texture(const struct TextureAtlas*, int n);
+void dispose_textures(struct TextureAtlas *t);
 
 /* Some non-printable key codes */
 #define ESC 27

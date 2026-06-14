@@ -17,10 +17,12 @@ void onSaveClicked(struct ui_button *button, void *arg)
 	ui_set_text(UI_BOX(args->label), ui_get_text(UI_BOX(args->name)));
 }
 
-
 int main()
 {
 	render_init(-1);
+	const struct TextureAtlas *textures = load_figlet_texture("assets/ascii9.txt");
+	int w, h, n;
+	get_texture_dims(textures, &n, &w, &h);
 
 	struct ui *ctx = ui_create();
 	if (!ctx) {
@@ -30,7 +32,7 @@ int main()
 
 	struct OnSaveArgs args;
 
-	ui_add_button(ctx, 1, 1, 5, 2, "Save", onSaveClicked, &args);
+	ui_add_button(ctx, 1, 1, 7, 2, "Save✅", onSaveClicked, &args);
 	ui_add_button(ctx, 1, 6, 7, 2, "Cancel", onCancelClicked, NULL);
 	ui_add_checkbox(ctx, 1, 10, 1, NULL);
 	args.name = ui_add_textbox(ctx, 1, 15, 15, 2, "Enter name", NULL);
@@ -38,6 +40,9 @@ int main()
 	args.label = ui_add_box(ctx, 1, 20, 35, 2, "Label");
 
 	ui_render(ctx); // First render
+	ui_process_input(ctx, 'j');
+	render_block(get_texture(textures, 2), 15, 0, w, h);
+	render_block(get_texture(textures, 9), 15, 8, w, h);
 	while (!calcelled) {
 		ui_process_input(ctx, get_keyboard_input());
 		render_clear();
