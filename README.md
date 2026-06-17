@@ -1,6 +1,8 @@
 # HomeTUI
 A TUI library for home TUI-based projects
 
+All pmh-* fonts are taken from: https://github.com/PhMajerus/FIGfonts
+
 ## TODO:
 - [ ] Deal with string storage in ui controls
 - [ ] Pass custom on/off text to checkbox
