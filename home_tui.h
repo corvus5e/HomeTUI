@@ -70,6 +70,7 @@ UI_CHAR* get_texture(const struct TextureAtlas*, int n);
 void dispose_textures(struct TextureAtlas *t);
 
 /* Some non-printable key codes */
+#define IDLE_INPUT -1
 #define ESC 27
 #define RESIZE 0632
 
