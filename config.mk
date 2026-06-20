@@ -5,7 +5,7 @@ UNAME_S := $(shell uname -s)
 
 # Compiler defaults
 CC ?= cc
-COMPILE_FLAGS += -std=c11 -Wall
+COMPILE_FLAGS ?= -std=c23 -Wall
 
 # Ncurses Discovery
 ifeq ($(UNAME_S),Darwin)
