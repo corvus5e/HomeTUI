@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define CONTROLS_NUM 10
+#define CONTROLS_NUM 100
 
 struct ui_box {
 	int x, y, w, h;
@@ -341,7 +341,7 @@ void ui_render_textbox(const struct ui *ctx, const struct ui_box *text_box, cons
 
 	set_color(style->fg_color_id, style->bg_color_id);
 
-	int x_end = tb->box.x + tb->box.w;
+	int x_end = tb->box.x + strlen(tb->box.text) + 1;
 	for(int x = tb->box.x; x <= x_end; ++x)
 		render_cell(x, tb->box.y + 2, style->horizontal_border);
 
@@ -349,7 +349,6 @@ void ui_render_textbox(const struct ui *ctx, const struct ui_box *text_box, cons
 
 	reset_colors();
 
-	//TODO: render last text_box->box.w chars of text
 	render_text(text_box->x + 1, text_box->y + 1, tb->box.text);
 
 	if (ctx->selected > 0 && ctx->ui_controls[ctx->selected].box == text_box && //aka isSelected
