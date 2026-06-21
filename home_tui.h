@@ -35,7 +35,13 @@ const char* ui_get_text(struct ui_box*);
 int ui_is_checked(struct ui_checkbox*);
 
 void ui_render(const struct ui* ctx);
-/* Returns 1 if the input was handled, 0 - if was ignored or had no handler*/
+
+#define IGNORED 0
+#define PROCESSED 1
+#define PROCESSED_AND_FOCUSED 2
+#define PROCESSED_AND_UNFOCUSED 3
+
+/* Returns one of above defined statuses*/
 int ui_process_input(struct ui *ctx, int key);
 
 /*
@@ -69,10 +75,14 @@ void get_texture_dims(const struct TextureAtlas*, int *number, int *width, int *
 UI_CHAR* get_texture(const struct TextureAtlas*, int n);
 void dispose_textures(struct TextureAtlas *t);
 
-/* Some non-printable key codes */
+/* Some key codes */
 #define IDLE_INPUT -1
-#define ESC 27
 #define RESIZE 0632
+#define ESC 27
+#define LINE_FEED 10
+#define CARRIAGE_RETURN 13
+#define SPACE 32
+#define DEL 127
 
 /* Color constants */
 #define COLOR_DARK_GREEN   22

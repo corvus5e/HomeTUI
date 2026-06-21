@@ -82,17 +82,18 @@ void ui_render_button(const struct ui *ctx, const struct ui_box *, const struct 
 void ui_render_textbox(const struct ui *ctx, const struct ui_box *, const struct ui_style*);
 void ui_render_checkbox(const struct ui *ctx, const struct ui_box *, const struct ui_style*);
 
-void ui_click_box(struct ui *ctx, const struct ui_box *);
-void ui_click_button(struct ui *ctx, const struct ui_box *);
-void ui_click_checkbox(struct ui *ctx, const struct ui_box *);
-void ui_click_textbox(struct ui *ctx, const struct ui_box *);
+struct ui_box create_ui_box(int x, int y, int w, int h, const char *text);
+
+int ui_click_box(struct ui *ctx, const struct ui_box *);
+int ui_click_button(struct ui *ctx, const struct ui_box *);
+int ui_click_checkbox(struct ui *ctx, const struct ui_box *);
+int ui_click_textbox(struct ui *ctx, const struct ui_box *);
 
 int ui_click_control(struct ui *ctx, const struct ui_control control)
 {
-	static void (*ui_click_[TYPE_COUNT])(struct ui *, const struct ui_box *) = {
+	static int (*ui_click_[TYPE_COUNT])(struct ui *, const struct ui_box *) = {
 	    ui_click_box, ui_click_button, ui_click_textbox, ui_click_checkbox};
-	ui_click_[control.type](ctx, control.box);
-	return 1;
+	return ui_click_[control.type](ctx, control.box);
 }
 
 void ui_render_control(const struct ui *ctx, const struct ui_control control,
@@ -130,40 +131,47 @@ int ui_process_input_navigate(struct ui *ctx, int key)
 	case 'j':
 		if(ctx->selected + 1 < ctx->ui_controls_size)
 			ctx->selected += 1;
-		return 1;
+		return PROCESSED;
 	case 'k':
 		if(ctx->selected > 0)
 			ctx->selected -= 1;
-		return 1;
+		return PROCESSED;
 	}
 
-	return 0;
+	return IGNORED;
 }
 
 int ui_process_input_edit(struct ui *ctx, int key)
 {
 	//NOTE: Currently only textbox is editable
 	struct ui_textbox *tb = (struct ui_textbox*)ctx->ui_controls[ctx->selected].box;
-	if(key == 127/*Del*/){
+	if(key == DEL){
 		size_t n = strlen(tb->box.text);
 		if(n > 0)
 			tb->box.text[n-1] = '\0';
-		return 1;
+		return PROCESSED;
 	}
-	else if(key > 31 && key < 127) { /* Visual chars*/
-		size_t n = strlen(tb->box.text);
-		tb->box.text[n] = key; //TODO: Use vector here, assume ehough memory for now
-		return 1;
+	else if(key >= SPACE && key < DEL) { /* Visual chars*/
+		//TODO: Replace this mess with dedicated function
+		const int n = strlen(tb->box.text);
+		char *new = malloc(n + 2);
+		strcpy(new, tb->box.text);
+		free(tb->box.text);
+		new[n] = key;
+		new[n+1] = '\0';
+		tb->box.text = new;
+		return PROCESSED;
 	}
 
-	return 0;
+	return IGNORED;
 }
 
 
 int ui_process_input(struct ui *ctx, int key)
 {
-	if(key == 10 || key == 13)
+	if(key == LINE_FEED || key == CARRIAGE_RETURN) {// Enter pressed
 		return ui_click_control(ctx, ctx->ui_controls[ctx->selected]);
+	}
 
 	switch (ctx->mode) {
 	case NAVIGATE:
@@ -172,19 +180,14 @@ int ui_process_input(struct ui *ctx, int key)
 			return ui_process_input_edit(ctx, key);
 	}
 
-	return 0;
+	return IGNORED;
 }
 
 struct ui_box *ui_add_box(struct ui *ctx, int x, int y, int w, int h, const char *text)
 {
 	struct ui_box *box = (struct ui_box*)malloc(sizeof(struct ui_box));
-
-	box->x = x; box->y = y; box->w = w; box->h = h;
-	box->text = NULL;
-	ui_set_text(box, text);
-
+	*box = create_ui_box(x, y, w, h, text);
 	ui_add_control(ctx, box, BOX);
-
 	return box;
 }
 
@@ -192,11 +195,7 @@ struct ui_button *ui_add_button(struct ui *ctx, int x, int y, int w, int h, char
 		  onButtonClick on_click, void * arg)
 {
 	struct ui_button *button = (struct ui_button *)malloc(sizeof(struct ui_button));
-
-	struct ui_box box = {x, y, w, h, NULL};
-	button->box = box;
-
-	ui_set_text(UI_BOX(button), text);
+	button->box = create_ui_box(x, y, w, h, text);
 
 	button->on_click = on_click;
 	button->on_click_arg = arg;
@@ -210,11 +209,9 @@ struct ui_checkbox *ui_add_checkbox(struct ui *ctx, int x, int y, int state, onC
 {
 	struct ui_checkbox *check_box = (struct ui_checkbox *)malloc(sizeof(struct ui_checkbox));
 
-	struct ui_box box = {x, y, 4, 2};
-	check_box->box = box;
+	check_box->box = create_ui_box(x, y, 4, 2, state ? CHECK_BOX_ON : CHECK_BOX_OFF);
 	check_box->is_checked = state;
 	check_box->on_click = on_click;
-	ui_set_text(UI_BOX(check_box), state ? CHECK_BOX_ON : CHECK_BOX_OFF);
 
 	ui_add_control(ctx, (struct ui_box*)check_box, CHECK_BOX);
 
@@ -224,13 +221,8 @@ struct ui_checkbox *ui_add_checkbox(struct ui *ctx, int x, int y, int state, onC
 struct ui_textbox *ui_add_textbox(struct ui *ctx, int x, int y, int w, int h, char *text, onTextBoxTextEntered on_value_entered)
 {
 	struct ui_textbox *text_box = (struct ui_textbox *)malloc(sizeof(struct ui_textbox));
-
-	struct ui_box box = {x, y, w, h};
-	text_box->box = box;
-
-	ui_set_text(UI_BOX(text_box), text);
+	text_box->box = create_ui_box(x, y, 4, 2, text);
 	text_box->on_value_entered = on_value_entered;
-
 	ui_add_control(ctx, UI_BOX(text_box), TEXT_BOX);
 
 	return text_box;
@@ -251,45 +243,55 @@ int ui_is_checked(struct ui_checkbox *cb) {
 	return cb->is_checked;
 }
 
+struct ui_box create_ui_box(int x, int y, int w, int h, const char *text) {
+	struct ui_box box = {.x = x, .y = y, .w = w, .h = h, .text = NULL};
+	ui_set_text(&box, text);
+	return box;
+}
+
 /**********************
  * CLICK UI FUNCTIONS *
  **********************/
-void ui_click_box(struct ui *ctx, const struct ui_box *box)
+int ui_click_box(struct ui *ctx, const struct ui_box *box)
 {
-	// Nothing to go for now
+	return IGNORED;
 }
 
-void ui_click_button(struct ui *ctx, const struct ui_box *box)
+int ui_click_button(struct ui *ctx, const struct ui_box *box)
 {
 	struct ui_button *button = (struct ui_button *)box;
 	if (button->on_click)
 		button->on_click(button, button->on_click_arg);
+	return PROCESSED;
 }
 
-void ui_click_checkbox(struct ui *ctx, const struct ui_box *box)
+int ui_click_checkbox(struct ui *ctx, const struct ui_box *box)
 {
 	struct ui_checkbox *check_box = (struct ui_checkbox *)box;
 	check_box->is_checked = !check_box->is_checked;
 	ui_set_text(UI_BOX(check_box), check_box->is_checked ? CHECK_BOX_ON : CHECK_BOX_OFF);
 	if (check_box->on_click)
 		check_box->on_click(check_box);
+
+	return PROCESSED;
 }
 
-//TODO: Rename it, it is not clicked actually
-void ui_click_textbox(struct ui *ctx, const struct ui_box *box)
+int ui_click_textbox(struct ui *ctx, const struct ui_box *box)
 {
 	struct ui_textbox *text_box = (struct ui_textbox *)box;
 
 	if(ctx->mode == NAVIGATE) {
 		ctx->mode = EDIT;
+		return PROCESSED_AND_FOCUSED;
 	}
 	else { // EDIT mode
 		ctx->mode = NAVIGATE;
 		if (text_box->on_value_entered)
 			text_box->on_value_entered(text_box);
-
+		return PROCESSED_AND_UNFOCUSED;
 	}
 
+	return IGNORED;
 }
 
 /*********************
