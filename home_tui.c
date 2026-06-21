@@ -146,20 +146,21 @@ int ui_process_input_edit(struct ui *ctx, int key)
 	//NOTE: Currently only textbox is editable
 	struct ui_textbox *tb = (struct ui_textbox*)ctx->ui_controls[ctx->selected].box;
 	if(key == DEL){
-		size_t n = strlen(tb->box.text);
+		size_t n = strlen(ui_get_text(&tb->box));
 		if(n > 0)
 			tb->box.text[n-1] = '\0';
 		return PROCESSED;
 	}
 	else if(key >= SPACE && key < DEL) { /* Visual chars*/
 		//TODO: Replace this mess with dedicated function
-		const int n = strlen(tb->box.text);
+		//TODO: Make static edit string !
+		const char* old = ui_get_text(&tb->box);
+		const int n = strlen(old);
 		char *new = malloc(n + 2);
-		strcpy(new, tb->box.text);
-		free(tb->box.text);
+		strcpy(new, old);
 		new[n] = key;
 		new[n+1] = '\0';
-		tb->box.text = new;
+		ui_set_text(&tb->box, new);
 		return PROCESSED;
 	}
 
@@ -231,12 +232,17 @@ struct ui_textbox *ui_add_textbox(struct ui *ctx, int x, int y, int w, int h, ch
 void ui_set_text(struct ui_box *box, const char* new_text)
 {
 	free(box->text);
-	box->text = strdup(new_text);
+	box->text = NULL;
+	if(new_text) {
+		box->text = strdup(new_text);
+	}
 }
 
-const char* ui_get_text(struct ui_box *box)
+const char* ui_get_text(const struct ui_box *box)
 {
-	return box->text;
+	if(box->text)
+		return box->text;
+	return "";
 }
 
 int ui_is_checked(struct ui_checkbox *cb) {
@@ -341,7 +347,8 @@ void ui_render_textbox(const struct ui *ctx, const struct ui_box *text_box, cons
 
 	set_color(style->fg_color_id, style->bg_color_id);
 
-	int x_end = tb->box.x + strlen(tb->box.text) + 1;
+	int str_len = strlen(ui_get_text(&tb->box));
+	int x_end = tb->box.x + str_len + 1;
 	for(int x = tb->box.x; x <= x_end; ++x)
 		render_cell(x, tb->box.y + 2, style->horizontal_border);
 
@@ -349,13 +356,12 @@ void ui_render_textbox(const struct ui *ctx, const struct ui_box *text_box, cons
 
 	reset_colors();
 
-	render_text(text_box->x + 1, text_box->y + 1, tb->box.text);
+	render_text(text_box->x + 1, text_box->y + 1, ui_get_text(&tb->box));
 
 	if (ctx->selected > 0 && ctx->ui_controls[ctx->selected].box == text_box && //aka isSelected
 	    ctx->mode == EDIT) {
-		int n = strlen(tb->box.text);
 		set_color(style->fg_color_id, style->bg_color_id);
-		render_cell(text_box->x + 1 + n, text_box->y + 1, TEXT_BOX_CLOSING_INPUT);
+		render_cell(text_box->x + 1 + str_len, text_box->y + 1, TEXT_BOX_CLOSING_INPUT);
 		reset_colors();
 	}
 }

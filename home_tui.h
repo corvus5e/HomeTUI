@@ -31,7 +31,7 @@ struct ui_checkbox *ui_add_checkbox(struct ui *ctx, int x, int y, int state, onC
 struct ui_textbox  *ui_add_textbox(struct ui *ctx, int x, int y, int w, int h, char *initial_text, onTextBoxTextEntered);
 
 void ui_set_text(struct ui_box*, const char*);
-const char* ui_get_text(struct ui_box*);
+const char* ui_get_text(const struct ui_box*);
 int ui_is_checked(struct ui_checkbox*);
 
 void ui_render(const struct ui* ctx);
