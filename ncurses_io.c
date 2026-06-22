@@ -107,7 +107,6 @@ int get_keyboard_input() { return getch(); }
 
 /* Extensions */
 struct TextureAtlas {
-	const char *data;
 	int width;
 	int height;
 	int number;
