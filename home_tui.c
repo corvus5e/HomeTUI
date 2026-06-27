@@ -26,7 +26,7 @@ struct ui_button {
 
 struct ui_checkbox {
 	struct ui_box	box;
-	int		is_checked;
+	bool		is_checked;
 	onCheckBoxClick on_click;
 };
 
@@ -44,6 +44,28 @@ struct ui {
 	int	       selected;
 	enum ui_mode   mode;
 };
+
+bool ui_focus_move(struct ui* ctx, int step) {
+        int i = ctx->selected + step;
+
+	while (i >= 0 && i < ctx->ui_controls_size && !ctx->ui_controls[i]->click) {
+		i += step;
+	}
+
+	if(i >= 0 && i < ctx->ui_controls_size) {
+                ctx->selected = i;
+                return true;
+        }
+
+        return false;
+}
+
+struct ui_box* ui_get_selected(const struct ui* ctx){
+        if(ctx->selected >= 0 && ctx->selected < ctx->ui_controls_size) {
+                return ctx->ui_controls[ctx->selected];
+        }
+        return nullptr;
+}
 
 struct ui_style {
 	const UI_CHAR vertical_border;
@@ -108,7 +130,7 @@ struct ui    *ui_create(void)
 {
 	struct ui *ctx = (struct ui *)malloc(sizeof(struct ui));
 	if (!ctx)
-		return NULL;
+		return nullptr;
 
 	ctx->ui_controls_size = 0;
 	ctx->selected	      = -1;
@@ -134,12 +156,10 @@ int ui_process_input_navigate(struct ui *ctx, int key)
 {
 	switch (key) {
 	case 'j':
-		if (ctx->selected + 1 < ctx->ui_controls_size)
-			ctx->selected += 1;
+		ui_focus_move(ctx, 1);
 		return PROCESSED;
 	case 'k':
-		if (ctx->selected > 0)
-			ctx->selected -= 1;
+		ui_focus_move(ctx, -1);
 		return PROCESSED;
 	}
 
@@ -149,7 +169,7 @@ int ui_process_input_navigate(struct ui *ctx, int key)
 int ui_process_input_edit(struct ui *ctx, int key)
 {
 	// NOTE: Currently only textbox is editable
-	struct ui_textbox *tb = (struct ui_textbox *)ctx->ui_controls[ctx->selected];
+	struct ui_textbox *tb = (struct ui_textbox *)ui_get_selected(ctx);
 	if (key == DEL) {
 		size_t n = strlen(ui_get_text(&tb->box));
 		if (n > 0)
@@ -174,7 +194,7 @@ int ui_process_input_edit(struct ui *ctx, int key)
 int ui_process_input(struct ui *ctx, int key)
 {
 	if (key == LINE_FEED || key == CARRIAGE_RETURN) { // Enter pressed
-		struct ui_box *box = ctx->ui_controls[ctx->selected];
+		struct ui_box *box = ui_get_selected(ctx);
 		return box->click(ctx, box);
 	}
 
@@ -191,7 +211,7 @@ int ui_process_input(struct ui *ctx, int key)
 struct ui_box *ui_add_box(struct ui *ctx, int x, int y, int w, int h, const char *text)
 {
 	struct ui_box *box = (struct ui_box *)malloc(sizeof(struct ui_box));
-	*box		   = create_ui_box(x, y, w, h, text, ui_click_box, ui_render_box);
+	*box		   = create_ui_box(x, y, w, h, text, nullptr, ui_render_box);
 	ui_add_control(ctx, box);
 	return box;
 }
@@ -238,7 +258,7 @@ ui_add_textbox(struct ui *ctx, int x, int y, int w, int h, char *text, onTextBox
 void ui_set_text(struct ui_box *box, const char *new_text)
 {
 	free(box->text);
-	box->text = NULL;
+	box->text = nullptr;
 	if (new_text)
 		box->text = strdup(new_text);
 }
@@ -254,7 +274,7 @@ int	      ui_is_checked(struct ui_checkbox *cb) { return cb->is_checked; }
 
 struct ui_box create_ui_box(int x, int y, int w, int h, const char *text, ClickBox click, RenderBox render)
 {
-	struct ui_box box = {.x = x, .y = y, .w = w, .h = h, .text = NULL, .click = click, .render = render};
+	struct ui_box box = {.x = x, .y = y, .w = w, .h = h, .text = nullptr, .click = click, .render = render};
 	ui_set_text(&box, text);
 	return box;
 }
@@ -262,8 +282,6 @@ struct ui_box create_ui_box(int x, int y, int w, int h, const char *text, ClickB
 /**********************
  * CLICK UI FUNCTIONS *
  **********************/
-int ui_click_box(struct ui *ctx, struct ui_box *box) { return IGNORED; }
-
 int ui_click_button(struct ui *ctx, struct ui_box *box)
 {
 	struct ui_button *button = (struct ui_button *)box;
@@ -361,8 +379,7 @@ void ui_render_textbox(const struct ui *ctx, const struct ui_box *text_box, cons
 
 	render_text(text_box->x + 1, text_box->y + 1, ui_get_text(&tb->box));
 
-	if (ctx->selected > 0 && ctx->ui_controls[ctx->selected] == text_box && // aka isSelected
-	    ctx->mode == EDIT) {
+	if (ui_get_selected(ctx) == text_box && ctx->mode == EDIT) {
 		set_color(style->fg_color_id, style->bg_color_id);
 		render_cell(text_box->x + 1 + str_len, text_box->y + 1, TEXT_BOX_CLOSING_INPUT);
 		reset_colors();
