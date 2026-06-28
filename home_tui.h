@@ -12,6 +12,9 @@
 #define CHAR_L(ascii_char, utf8_str) ascii_char
 #endif
 
+#define CONTROLS_NUM 100
+#define EDIT_BUF_LEN 255
+
 struct ui_box;
 #define UI_BOX(obj) ((struct ui_box *)(obj))
 

@@ -40,13 +40,14 @@ int main()
 	args.label = ui_add_box(ctx, 1, 20, 35, 2, "Label");
 
 	ui_render(ctx); // First render
-	ui_process_input(ctx, 'j');
 	render_block(get_texture(textures, 2), 15, 0, w, h);
 	render_block(get_texture(textures, 9), 15, 8, w, h);
 	while (!calcelled) {
 		ui_process_input(ctx, get_keyboard_input());
 		render_clear();
 		ui_render(ctx);
+		render_block(get_texture(textures, 2), 15, 0, w, h);
+		render_block(get_texture(textures, 9), 15, 8, w, h);
 		render_update();
 	}
 
