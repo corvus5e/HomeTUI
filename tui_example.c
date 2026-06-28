@@ -1,26 +1,31 @@
 #include "home_tui.h"
 
 #include <stdio.h>
+#include <string.h>
 
 int calcelled = 0;
 
-struct OnSaveArgs {
+struct MyTUI {
 	struct ui_box *label;
-	struct ui_textbox *name;
+	struct ui_textbox *name_text_box;
+        char name_buf[100];
+        char label_buf[100];
 };
 
-void onCancelClicked(struct ui_button *button, void *arg) { calcelled = 1; }
+void onCancelClicked(void *arg) { calcelled = 1; }
 
-void onSaveClicked(struct ui_button *button, void *arg)
+void onSaveClicked(void *arg)
 {
-	struct OnSaveArgs *args = (struct OnSaveArgs*)(arg);
-	ui_set_text(UI_BOX(args->label), ui_get_text(UI_BOX(args->name)));
+	struct MyTUI *args = (struct MyTUI *)(arg);
+        strcpy(args->label_buf, args->name_buf);
 }
+
+void onNameEntered(void *arg) {}
 
 int main()
 {
 	render_init(-1);
-	const struct TextureAtlas *textures = load_figlet_texture("assets/ascii9.txt");
+	const struct TextureAtlas *textures = load_figlet_texture("assets/home-tui-logo.txt");
 	int w, h, n;
 	get_texture_dims(textures, &n, &w, &h);
 
@@ -30,24 +35,27 @@ int main()
 		return 1;
 	}
 
-	struct OnSaveArgs args;
+	struct MyTUI args;
 
-	ui_add_button(ctx, 1, 1, 7, 2, "Save✅", onSaveClicked, &args);
-	ui_add_button(ctx, 1, 6, 7, 2, "Cancel", onCancelClicked, NULL);
-	ui_add_checkbox(ctx, 1, 10, 1, NULL);
-	args.name = ui_add_textbox(ctx, 1, 15, 15, 2, "Enter name", NULL);
-	ui_add_textbox(ctx, 18, 15, 15, 2, "Enter sirname", NULL);
-	args.label = ui_add_box(ctx, 1, 20, 35, 2, "Label");
+	render_block(get_texture(textures, 0), 4, 1, w, h);
+	ui_add_box(ctx, 4, 4, 6, "Name:", 6);
+	args.name_text_box = ui_add_textbox(ctx, 12, 4, 15, strcpy(args.name_buf, ""), sizeof(args.name_buf), onNameEntered, nullptr);
+
+        ui_add_box(ctx, 4, 7, 15, "Add sparkles", 13);
+	ui_add_checkbox(ctx, 22, 7, 1, nullptr, nullptr);
+
+	args.label = ui_add_box(ctx, 4, 10, 6, strcpy(args.label_buf, ""), sizeof(args.label_buf));
+//✨, TODO: Add add_... macros wrappers
+//          Add UTF-8 compatible strlen (for render)
+	ui_add_button(ctx, 4, 22, 7, "Save", 5, onSaveClicked, &args);
+	ui_add_button(ctx, 12, 22, 7, "Exit", 5, onCancelClicked, nullptr);
 
 	ui_render(ctx); // First render
-	render_block(get_texture(textures, 2), 15, 0, w, h);
-	render_block(get_texture(textures, 9), 15, 8, w, h);
 	while (!calcelled) {
 		ui_process_input(ctx, get_keyboard_input());
 		render_clear();
 		ui_render(ctx);
-		render_block(get_texture(textures, 2), 15, 0, w, h);
-		render_block(get_texture(textures, 9), 15, 8, w, h);
+	        render_block(get_texture(textures, 0), 4, 1, w, h);
 		render_update();
 	}
 

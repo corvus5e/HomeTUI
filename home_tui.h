@@ -14,6 +14,7 @@
 
 #define CONTROLS_NUM 100
 #define EDIT_BUF_LEN 255
+#define LETTER_HEIGHT 1 /* For tui it's 1 */
 
 struct ui_box;
 #define UI_BOX(obj) ((struct ui_box *)(obj))
@@ -22,18 +23,16 @@ struct ui_checkbox;
 struct ui_textbox;
 struct ui_button;
 
-typedef void (*onButtonClick)(struct ui_button *, void *arg);
-typedef void (*onCheckBoxClick)(struct ui_checkbox *);
-typedef void (*onTextBoxTextEntered)(struct ui_textbox *);
+typedef void (*onAction)(void *arg);
 
 struct ui	   *ui_create(void);
 
-struct ui_box	   *ui_add_box(struct ui *ctx, int x, int y, int w, int h, const char *text);
-struct ui_button   *ui_add_button(struct ui *ctx, int x, int y, int w, int h, char *text, onButtonClick, void *);
-struct ui_checkbox *ui_add_checkbox(struct ui *ctx, int x, int y, int state, onCheckBoxClick);
-struct ui_textbox *ui_add_textbox(struct ui *ctx, int x, int y, int w, int h, char *initial_text, onTextBoxTextEntered);
+struct ui_box	   *ui_add_box(struct ui *ctx, int x, int y, int w, char *buf, size_t buf_len);
+struct ui_button   *ui_add_button(struct ui *ctx, int x, int y, int w, char *buf, size_t buf_len, onAction, void *);
+struct ui_checkbox *ui_add_checkbox(struct ui *ctx, int x, int y, int state, onAction, void *);
+struct ui_textbox *ui_add_textbox(struct ui *ctx, int x, int y, int w, char *buf, size_t buf_len, onAction, void *);
 
-void		   ui_set_text(struct ui_box *, const char *);
+void		   ui_set_text(struct ui_box *, char *buf, size_t buf_len);
 const char	  *ui_get_text(const struct ui_box *);
 int		   ui_is_checked(struct ui_checkbox *);
 

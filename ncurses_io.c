@@ -183,7 +183,7 @@ bool read_figlet_texture_metadata(FILE *f, int *number, int *width, int *height)
 		RET_LOG("Failed to parse metadata from figlet texture file\n", false);
 	}
 
-	if(!IN_RANGE(*width, 1, 20) || !IN_RANGE(*height, 1, 20) || !IN_RANGE(*number, 1, 40)) {
+	if(!IN_RANGE(*width, 1, 30) || !IN_RANGE(*height, 1, 20) || !IN_RANGE(*number, 1, 40)) {
 		RET_LOG("Metadata in figlet texture file is too large\n", false);
 	}
 
