@@ -38,17 +38,17 @@ int main()
 	struct MyTUI args;
 
 	render_block(get_texture(textures, 0), 4, 1, w, h);
-	ui_add_box(ctx, 4, 4, 6, "Name:", 6);
-	args.name_text_box = ui_add_textbox(ctx, 12, 4, 15, strcpy(args.name_buf, ""), sizeof(args.name_buf), onNameEntered, nullptr);
+	ui_add_box(ctx, 4, 4, 6, CONST_STR_ARG("Name:"));
+	args.name_text_box = ui_add_textbox(ctx, 12, 4, 15, BUF_STR_ARG(args.name_buf, sizeof(args.name_buf), ""), onNameEntered, nullptr);
 
-        ui_add_box(ctx, 4, 7, 15, "Add sparkles", 13);
+        ui_add_box(ctx, 4, 7, 15, CONST_STR_ARG("Add sparkles"));
 	ui_add_checkbox(ctx, 22, 7, 1, nullptr, nullptr);
 
-	args.label = ui_add_box(ctx, 4, 10, 6, strcpy(args.label_buf, ""), sizeof(args.label_buf));
+	args.label = ui_add_box(ctx, 4, 10, 6, BUF_STR_ARG(args.label_buf, sizeof(args.label_buf), ""));
 //✨, TODO: Add add_... macros wrappers
 //          Add UTF-8 compatible strlen (for render)
-	ui_add_button(ctx, 4, 22, 7, "Save", 5, onSaveClicked, &args);
-	ui_add_button(ctx, 12, 22, 7, "Exit", 5, onCancelClicked, nullptr);
+	ui_add_button(ctx, 4, 22, 7, CONST_STR_ARG("Save"), onSaveClicked, &args);
+	ui_add_button(ctx, 12, 22, 7, CONST_STR_ARG("Exit"), onCancelClicked, nullptr);
 
 	ui_render(ctx); // First render
 	while (!calcelled) {

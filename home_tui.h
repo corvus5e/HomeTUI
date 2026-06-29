@@ -2,6 +2,7 @@
 #define _HOME_TUI_H_
 
 #include <stddef.h>
+#include <string.h>
 
 #ifdef USE_UTF8
 #include <wchar.h>
@@ -37,6 +38,9 @@ const char	  *ui_get_text(const struct ui_box *);
 int		   ui_is_checked(struct ui_checkbox *);
 
 void		   ui_render(const struct ui *ctx);
+
+#define CONST_STR_ARG(s) (s), strlen(s)
+#define BUF_STR_ARG(buf, len, init_str) strcpy(buf, init_str), len
 
 #define IGNORED			0
 #define PROCESSED		1
